@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_exams_date ON exams(exam_date);
 CREATE TABLE IF NOT EXISTS exam_questions (
   id BIGSERIAL PRIMARY KEY,
   exam_id BIGINT NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
-  question_id BIGINT NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+  question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
   question_order INT NOT NULL,
   marks_override DOUBLE PRECISION,
   snapshot_json TEXT,
