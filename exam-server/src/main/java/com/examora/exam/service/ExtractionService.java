@@ -51,7 +51,7 @@ public class ExtractionService {
     paper.setStatus(QuestionPaper.Status.EXTRACTING);
     papers.save(paper);
     try {
-      List<PageText> pages = nougat.extract(storage.paperPdf(paperId));
+      List<PageText> pages = nougat.extract(storage.paperPdf(paperId), paperId);
       paper.setStatus(QuestionPaper.Status.EXTRACTED);
       papers.save(paper);
       return pages;
@@ -71,7 +71,7 @@ public class ExtractionService {
   public int saveExtracted(Long paperId, String examType, Long subjectId,
       Long topicId, String difficulty) {
     QuestionPaper paper = papers.findById(paperId).orElseThrow();
-    List<PageText> pages = nougat.extract(storage.paperPdf(paperId));
+    List<PageText> pages = nougat.extract(storage.paperPdf(paperId), paperId);
 
     Question.Difficulty diff;
     try {

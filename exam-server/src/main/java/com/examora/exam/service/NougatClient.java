@@ -24,10 +24,11 @@ public class NougatClient {
     this.webClient = webClient;
   }
 
-  public List<PageText> extract(Path pdfPath) {
+  public List<PageText> extract(Path pdfPath, Long paperId) {
     try {
       MultipartBodyBuilder mb = new MultipartBodyBuilder();
-      mb.part("file", new FileSystemResource(pdfPath.toFile()));
+      mb.part("pdf", new FileSystemResource(pdfPath.toFile()));
+      if (paperId != null) mb.part("paperId", String.valueOf(paperId));
       String json = webClient.post().uri("/extract")
           .contentType(MediaType.MULTIPART_FORM_DATA)
           .body(BodyInserters.fromMultipartData(mb.build()))

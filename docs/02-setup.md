@@ -11,6 +11,7 @@ psql postgresql://localhost:5432/examora -f db/V1__init.sql
 psql postgresql://localhost:5432/examora -f db/V2__exams.sql
 psql postgresql://localhost:5432/examora -f db/V3__seed_test_admin.sql
 psql postgresql://localhost:5432/examora -f db/V4__latex_base64.sql
+psql postgresql://localhost:5432/examora -f db/V5__align_jpa.sql
 ```
 
 ## 2. Environment
