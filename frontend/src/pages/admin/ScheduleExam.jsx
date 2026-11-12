@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useScheduleExamMutation } from '../../services/examApi.js';
+import { useScheduleExamMutation } from '../../services/scheduleApi.js';
 
 const EXAM_TYPES = ['MAIN', 'ADVANCED', 'NSEJS', 'NSEP', 'IOQM'];
 

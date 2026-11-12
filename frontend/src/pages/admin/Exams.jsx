@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useListExamsQuery, usePublishExamMutation } from '../../services/examApi.js';
+import { useListExamsQuery, usePublishExamMutation } from '../../services/scheduleApi.js';
 
 function asList(data) {
   if (Array.isArray(data)) return data;

@@ -8,9 +8,11 @@ import {
   useUploadQuestionImageMutation,
   useUploadOptionImageMutation,
   useSubmitPaperMutation,
-  useListExamsQuery,
   optionImageSrc
 } from '../../services/examApi.js';
+import {
+  useListExamsQuery
+} from '../../services/scheduleApi.js';
 
 function asList(data) {
   if (Array.isArray(data)) return data;

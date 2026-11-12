@@ -38,9 +38,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             .parseSignedClaims(token).getPayload();
         String subject = claims.getSubject();
         Object roles = claims.get("roles");
-        List<SimpleGrantedAuthority> authorities = roles instanceof List<?> list
-            ? list.stream().map(o -> new SimpleGrantedAuthority("ROLE_" + o)).toList()
-            : List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        if (roles == null) {
+          // auth-server issues the singular `role` claim (String).
+          roles = claims.get("role");
+        }
+        List<String> names;
+        if (roles instanceof List<?> list) {
+          names = list.stream().map(Object::toString).toList();
+        } else if (roles instanceof String s) {
+          names = java.util.Arrays.stream(s.split(",")).map(String::trim)
+              .filter(t -> !t.isEmpty()).toList();
+        } else {
+          names = List.of();
+        }
+        List<SimpleGrantedAuthority> authorities = names.isEmpty()
+            ? List.of(new SimpleGrantedAuthority("ROLE_USER"))
+            : names.stream().map(n -> new SimpleGrantedAuthority("ROLE_" + n)).toList();
         UsernamePasswordAuthenticationToken auth =
             new UsernamePasswordAuthenticationToken(subject, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(auth);

@@ -40,6 +40,9 @@ Render images as `data:{imageMime};base64,{imageBase64}`.
 
 ## Exams (`:8080/api/exams`, ADMIN)
 
+> Note: the admin portal now schedules via the `:8082` schedule store
+> (next section); these Java endpoints remain for service/student use.
+
 | Method | Path | Returns |
 |---|---|---|
 | POST | `/` (ExamRequest JSON) | 201 Exam |
@@ -52,6 +55,33 @@ Render images as `data:{imageMime};base64,{imageBase64}`.
 | POST | `/{id}/questions` `{questionIds:[...]}` | `{examId,added}` |
 | GET | `/{id}/questions` | `SavedQuestionDto[]` |
 | DELETE | `/{id}/questions/{qid}` | 204 |
+
+## Schedule store (`:8082`, SQLite)
+
+`schedule-server.py` (stdlib `http.server` + `sqlite3` only) owns exam
+scheduling; the admin portal talks to it via `VITE_SCHEDULE_API`
+(default `http://localhost:8082`). DB `./data/scheduled_tests.db`
+(gitignored), table `scheduled_tests`. Auth: Bearer HS256 JWT (shared
+`JWT_SECRET`, checks `exp`, accepts `role` or `roles`); reads need any
+valid token, writes (POST/PUT/publish/attach) need ADMIN — else
+401/403 JSON. Run: `JWT_SECRET=... python3 schedule-server.py`.
+
+| Method | Path | Returns |
+|---|---|---|
+| POST | `/api/exams` (name*, end>start, duration>0 else 400) | 201 Exam |
+| GET | `/api/exams` / `?status=` | list |
+| GET | `/api/exams/upcoming` | SCHEDULED/PUBLISHED, future |
+| GET | `/api/exams/{id}` | one |
+| PUT | `/api/exams/{id}` | DRAFT/SCHEDULED only, else 409 |
+| POST | `/api/exams/{id}/publish` | →PUBLISHED, else 409 |
+| POST | `/api/exams/{id}/papers` `{paperId}` | `{examId,added}` |
+| GET | `/api/exams/{id}/questions` | concatenated `:8080` paper questions; exam-server down → 502 |
+
+Exam JSON mirrors `ExamResponse` (`className/examDate/durationMinutes/…`)
+plus frontend aliases (`class/date/durationMin`) and paper linkage
+(`paperIds`, `paperId`, `papers`). `PUT` is a full replace (status kept).
+Questions proxy mints a short-lived `sub=schedule-service role=ADMIN`
+JWT with the same secret for `:8080/api/questions/paper/{pid}`.
 
 ## Subjects / Topics (`:8080`, JWT)
 

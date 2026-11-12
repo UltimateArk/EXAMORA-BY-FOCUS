@@ -3,10 +3,12 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useUploadPdfMutation,
   useProcessPaperMutation,
-  useAttachPaperMutation,
-  useListExamsQuery,
   useSubjectsQuery
 } from '../../services/examApi.js';
+import {
+  useAttachPaperMutation,
+  useListExamsQuery
+} from '../../services/scheduleApi.js';
 
 const STEPS = ['Uploading', 'Reading pages', 'Finding questions', 'Saving'];
 

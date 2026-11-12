@@ -13,7 +13,7 @@ export const examApi = createApi({
       return headers;
     }
   }),
-  tagTypes: ['Questions', 'Subjects', 'Topics', 'Exams'],
+  tagTypes: ['Questions', 'Subjects', 'Topics'],
   endpoints: (builder) => ({
     // ---- Backend truth: exam-server AdminController (/api/admin/*) ----
     uploadPdf: builder.mutation({
@@ -91,41 +91,6 @@ export const examApi = createApi({
       query: ({ id, status }) => ({ url: `/api/questions/${id}/verify`, method: 'PATCH', params: { status } }),
       invalidatesTags: ['Questions']
     }),
-    // ---- Admin portal: exam scheduling & papers ----
-    scheduleExam: builder.mutation({
-      query: (body) => ({ url: '/api/exams', method: 'POST', body }),
-      invalidatesTags: ['Exams']
-    }),
-    listExams: builder.query({
-      query: () => '/api/exams',
-      providesTags: ['Exams']
-    }),
-    getExam: builder.query({
-      query: (id) => `/api/exams/${id}`,
-      providesTags: (_r, _e, id) => [{ type: 'Exams', id }]
-    }),
-    updateExam: builder.mutation({
-      // Backend: PUT /api/exams/{id} (DRAFT/SCHEDULED only)
-      query: ({ id, ...body }) => ({ url: `/api/exams/${id}`, method: 'PUT', body }),
-      invalidatesTags: ['Exams']
-    }),
-    publishExam: builder.mutation({
-      // Backend: POST /api/exams/{id}/publish
-      query: (id) => ({ url: `/api/exams/${id}/publish`, method: 'POST' }),
-      invalidatesTags: ['Exams']
-    }),
-    attachPaper: builder.mutation({
-      query: ({ examId, paperId }) => ({
-        url: `/api/exams/${examId}/papers`,
-        method: 'POST',
-        body: { paperId }
-      }),
-      invalidatesTags: ['Exams']
-    }),
-    examQuestions: builder.query({
-      query: (examId) => `/api/exams/${examId}/questions`,
-      providesTags: ['Questions']
-    }),
     // ---- Admin portal: question review/edit ----
     updateQuestion: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/api/questions/${id}`, method: 'PUT', body }),
@@ -164,13 +129,6 @@ export const {
   useSubjectsQuery,
   useTopicsQuery,
   useVerifyQuestionMutation,
-  useScheduleExamMutation,
-  useListExamsQuery,
-  useGetExamQuery,
-  useUpdateExamMutation,
-  usePublishExamMutation,
-  useAttachPaperMutation,
-  useExamQuestionsQuery,
   useUpdateQuestionMutation,
   useUploadQuestionImageMutation,
   useUploadOptionImageMutation
