@@ -47,6 +47,9 @@ public class Question {
   @Column(name = "topic_id")
   private Long topicId;
 
+  @Column(name = "subtopic_id")
+  private Long subtopicId;
+
   @Enumerated(EnumType.STRING)
   private Difficulty difficulty = Difficulty.MEDIUM;
 
@@ -103,6 +106,8 @@ public class Question {
   public void setSubjectId(Long subjectId) { this.subjectId = subjectId; }
   public Long getTopicId() { return topicId; }
   public void setTopicId(Long topicId) { this.topicId = topicId; }
+  public Long getSubtopicId() { return subtopicId; }
+  public void setSubtopicId(Long subtopicId) { this.subtopicId = subtopicId; }
   public Difficulty getDifficulty() { return difficulty; }
   public void setDifficulty(Difficulty difficulty) { this.difficulty = difficulty; }
   public String getExamType() { return examType; }

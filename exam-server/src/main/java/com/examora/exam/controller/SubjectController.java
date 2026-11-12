@@ -1,8 +1,10 @@
 package com.examora.exam.controller;
 
 import com.examora.exam.entity.Subject;
+import com.examora.exam.entity.Subtopic;
 import com.examora.exam.entity.Topic;
 import com.examora.exam.repo.SubjectRepository;
+import com.examora.exam.repo.SubtopicRepository;
 import com.examora.exam.repo.TopicRepository;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +15,13 @@ public class SubjectController {
 
   private final SubjectRepository subjects;
   private final TopicRepository topics;
+  private final SubtopicRepository subtopics;
 
-  public SubjectController(SubjectRepository subjects, TopicRepository topics) {
+  public SubjectController(SubjectRepository subjects, TopicRepository topics,
+      SubtopicRepository subtopics) {
     this.subjects = subjects;
     this.topics = topics;
+    this.subtopics = subtopics;
   }
 
   @GetMapping("/api/subjects")
@@ -56,5 +61,26 @@ public class SubjectController {
       topics.save(t);
     }
     return topics.findAll();
+  }
+
+  @GetMapping("/api/subtopics/topic/{topicId}")
+  public List<Subtopic> subtopicsByTopic(@PathVariable Long topicId) {
+    return subtopics.findByTopicId(topicId);
+  }
+
+  @PostMapping("/api/subtopics/seed")
+  public List<Subtopic> seedSubtopics(@RequestBody(required = false) List<Map<String, String>> body) {
+    if (body == null) body = List.of();
+    for (Map<String, String> row : body) {
+      Subtopic st = new Subtopic();
+      st.setName(row.get("name"));
+      Long tid = Long.valueOf(row.get("topicId"));
+      Topic t = topics.findById(tid).orElseThrow();
+      st.setTopic(t);
+      boolean exists = subtopics.findByTopicId(tid).stream()
+          .anyMatch(s -> s.getName().equalsIgnoreCase(st.getName()));
+      if (!exists) subtopics.save(st);
+    }
+    return subtopics.findAll();
   }
 }

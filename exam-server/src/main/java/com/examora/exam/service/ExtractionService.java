@@ -95,7 +95,7 @@ public class ExtractionService {
       Long topicId, String difficulty) {
     QuestionPaper paper = papers.findById(paperId).orElseThrow();
     List<PageText> pages = nougat.extract(storage.paperPdf(paperId), paperId);
-    return saveExtractedWithPages(paper, pages, examType, subjectId, topicId, difficulty);
+    return saveExtractedWithPages(paper, pages, examType, subjectId, topicId, null, difficulty);
   }
 
   /**
@@ -106,7 +106,7 @@ public class ExtractionService {
    */
   @Transactional
   public Map<String, Object> processPaper(Long paperId, String examType, Long subjectId,
-      Long topicId, String difficulty) {
+      Long topicId, Long subtopicId, String difficulty) {
     QuestionPaper paper = papers.findById(paperId).orElseThrow();
     paper.setStatus(QuestionPaper.Status.EXTRACTING);
     paper.setErrorLog(null);
@@ -122,7 +122,7 @@ public class ExtractionService {
       for (PageText page : pages) {
         questionsFound += splitQuestions(page.extractedText()).size();
       }
-      int saved = saveExtractedWithPages(paper, pages, examType, subjectId, topicId, difficulty);
+      int saved = saveExtractedWithPages(paper, pages, examType, subjectId, topicId, subtopicId, difficulty);
       int keyApplied = applyAnswerKey(paperId, pages);
       paper.setStatus(QuestionPaper.Status.EXTRACTED);
       papers.save(paper);
@@ -227,7 +227,7 @@ public class ExtractionService {
 
   @Transactional
   int saveExtractedWithPages(QuestionPaper paper, List<PageText> pages, String examType,
-      Long subjectId, Long topicId, String difficulty) {
+      Long subjectId, Long topicId, Long subtopicId, String difficulty) {
     Long paperId = paper.getId();
     // Idempotent re-runs: wipe THIS paper's existing rows before re-saving.
     // Multi-paper isolation: deletes are scoped to paper_id, and crops live
@@ -273,6 +273,7 @@ public class ExtractionService {
         q.setExamType(examType);
         q.setSubjectId(subjectId);
         q.setTopicId(topicId);
+        q.setSubtopicId(subtopicId);
         q.setDifficulty(diff);
         q.setVerificationStatus(Question.VerificationStatus.PENDING);
         if (!pq.options().isEmpty()) {

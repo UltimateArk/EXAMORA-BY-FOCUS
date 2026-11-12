@@ -74,6 +74,7 @@ public class AdminController {
       @RequestParam(required = false) String examType,
       @RequestParam(required = false) Long subjectId,
       @RequestParam(required = false) Long topicId,
+      @RequestParam(required = false) Long subtopicId,
       @RequestParam(required = false, defaultValue = "MEDIUM") String difficulty) {
     int n = extraction.saveExtracted(paperId, examType, subjectId, topicId, difficulty);
     return new QuestionSaveResponse(n);
@@ -84,8 +85,9 @@ public class AdminController {
       @RequestParam(required = false) String examType,
       @RequestParam(required = false) Long subjectId,
       @RequestParam(required = false) Long topicId,
+      @RequestParam(required = false) Long subtopicId,
       @RequestParam(required = false, defaultValue = "MEDIUM") String difficulty) {
-    return extraction.processPaper(paperId, examType, subjectId, topicId, difficulty);
+    return extraction.processPaper(paperId, examType, subjectId, topicId, subtopicId, difficulty);
   }
 
   @PostMapping("/papers/{paperId}/submit")

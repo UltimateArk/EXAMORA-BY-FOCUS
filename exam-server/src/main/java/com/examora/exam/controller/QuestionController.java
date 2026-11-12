@@ -33,6 +33,20 @@ public class QuestionController {
     return service.generate(subjectId, topicId, difficulty, examType, count);
   }
 
+  @GetMapping("/search")
+  public List<SavedQuestionDto> search(
+      @RequestParam(required = false) String query,
+      @RequestParam(required = false) Long subjectId,
+      @RequestParam(required = false) Long topicId,
+      @RequestParam(required = false) Long subtopicId,
+      @RequestParam(required = false) String difficulty,
+      @RequestParam(required = false) String verificationStatus,
+      @RequestParam(required = false) String examType,
+      @RequestParam(required = false, defaultValue = "50") int limit) {
+    return service.search(query, subjectId, topicId, subtopicId, difficulty,
+        verificationStatus, examType, limit);
+  }
+
   @PatchMapping("/{id}/verify")
   public SavedQuestionDto verify(@PathVariable Long id,
       @RequestParam String status) {

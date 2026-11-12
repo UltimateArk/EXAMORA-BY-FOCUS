@@ -49,7 +49,7 @@ public class ExamService {
 
   @Transactional
   public ExamResponse create(ExamRequest req) {
-    validateTimes(req.startTime(), req.endTime(), req.durationMinutes());
+    validateTimes(req.getStartTime(), req.getEndTime(), req.getDurationMinutes());
     Exam e = new Exam();
     apply(e, req);
     if (e.getStatus() == null) e.setStatus("DRAFT");
@@ -85,7 +85,7 @@ public class ExamService {
   public ExamResponse update(Long id, ExamRequest req) {
     Exam e = findOr404(id);
     requireEditable(e);
-    validateTimes(req.startTime(), req.endTime(), req.durationMinutes());
+    validateTimes(req.getStartTime(), req.getEndTime(), req.getDurationMinutes());
     apply(e, req);
     return ExamResponse.from(exams.save(e));
   }
@@ -111,7 +111,13 @@ public class ExamService {
     List<Question> approved = paperQuestions.stream()
         .filter(q -> q.getVerificationStatus() == Question.VerificationStatus.APPROVED)
         .toList();
-    List<Question> toCopy = approved.isEmpty() ? paperQuestions : approved;
+    // PRD: only approved questions may enter an exam — no fallback to unapproved.
+    if (approved.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT,
+          "Paper has no approved questions; review and approve before attaching (total: "
+              + paperQuestions.size() + ")");
+    }
+    List<Question> toCopy = approved;
     toCopy.sort(Comparator.comparing(Question::getQuestionNumber,
         Comparator.nullsLast(Comparator.naturalOrder())));
     int order = nextOrder(examId);
@@ -139,6 +145,11 @@ public class ExamService {
     for (Long qid : questionIds) {
       Question q = questions.findById(qid).orElseThrow(() ->
           new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + qid));
+      // PRD: only approved questions may enter an exam.
+      if (q.getVerificationStatus() != Question.VerificationStatus.APPROVED) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT,
+            "Question not approved: " + qid + " (status: " + q.getVerificationStatus() + ")");
+      }
       if (examQuestions.existsByExamIdAndQuestionId(examId, qid)) continue;
       ExamQuestion eq = new ExamQuestion();
       eq.setExam(exam);
@@ -190,24 +201,24 @@ public class ExamService {
   }
 
   private void apply(Exam e, ExamRequest req) {
-    e.setName(req.name());
-    e.setExamType(req.examType());
-    e.setClassName(req.className());
-    e.setBoard(req.board());
-    e.setExamDate(req.examDate());
-    e.setStartTime(req.startTime());
-    e.setEndTime(req.endTime());
-    e.setDurationMinutes(req.durationMinutes());
-    e.setFee(req.fee());
-    e.setRegDeadline(req.regDeadline());
-    if (req.maxAttempts() > 0) e.setMaxAttempts(req.maxAttempts());
-    e.setInstructions(req.instructions());
-    e.setMarksCorrect(req.marksCorrect());
-    e.setNegativeMarks(req.negativeMarks());
-    e.setMarksUnanswered(req.marksUnanswered());
-    e.setResultDate(req.resultDate());
-    e.setAnswerReview(req.answerReview());
-    e.setCentres(req.centres());
+    e.setName(req.getName());
+    e.setExamType(req.getExamType());
+    e.setClassName(req.getClassName());
+    e.setBoard(req.getBoard());
+    e.setExamDate(req.getExamDate());
+    e.setStartTime(req.getStartTime());
+    e.setEndTime(req.getEndTime());
+    e.setDurationMinutes(req.getDurationMinutes());
+    e.setFee(req.getFee());
+    e.setRegDeadline(req.getRegDeadline());
+    if (req.getMaxAttempts() > 0) e.setMaxAttempts(req.getMaxAttempts());
+    e.setInstructions(req.getInstructions());
+    e.setMarksCorrect(req.getMarksCorrect());
+    e.setNegativeMarks(req.getNegativeMarks());
+    e.setMarksUnanswered(req.getMarksUnanswered());
+    e.setResultDate(req.getResultDate());
+    e.setAnswerReview(req.isAnswerReview());
+    e.setCentres(req.getCentres());
   }
 
   private int nextOrder(Long examId) {

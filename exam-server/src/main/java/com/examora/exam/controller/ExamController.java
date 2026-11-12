@@ -21,8 +21,17 @@ public class ExamController {
     this.service = service;
   }
 
-  public record PaperAttachRequest(Long paperId) {}
-  public record QuestionAttachRequest(List<Long> questionIds) {}
+  public static class PaperAttachRequest {
+    public Long paperId;
+    public Long getPaperId() { return paperId; }
+    public void setPaperId(Long paperId) { this.paperId = paperId; }
+  }
+
+  public static class QuestionAttachRequest {
+    public List<Long> questionIds;
+    public List<Long> getQuestionIds() { return questionIds; }
+    public void setQuestionIds(List<Long> questionIds) { this.questionIds = questionIds; }
+  }
 
   @PostMapping
   public ResponseEntity<ExamResponse> create(@Valid @RequestBody ExamRequest req) {
@@ -57,14 +66,14 @@ public class ExamController {
   @PostMapping("/{id}/papers")
   public Map<String, Object> attachPaper(@PathVariable Long id,
       @RequestBody PaperAttachRequest body) {
-    int added = service.attachPaper(id, body.paperId());
+    int added = service.attachPaper(id, body.getPaperId());
     return Map.of("examId", id, "added", added);
   }
 
   @PostMapping("/{id}/questions")
   public Map<String, Object> attachQuestions(@PathVariable Long id,
       @RequestBody QuestionAttachRequest body) {
-    int added = service.attachQuestions(id, body.questionIds());
+    int added = service.attachQuestions(id, body.getQuestionIds());
     return Map.of("examId", id, "added", added);
   }
 

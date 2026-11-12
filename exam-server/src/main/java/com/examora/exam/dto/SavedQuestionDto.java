@@ -7,7 +7,8 @@ public record SavedQuestionDto(Long id, Long paperId, Integer questionNumber,
     String questionType, Long subjectId, Long topicId, String difficulty,
     String examType, String imagePath, String verificationStatus,
     List<OptionDto> options, String correctAnswer,
-    String latex, String imageBase64, String imageMime, String diagramBase64) {
+    String latex, String imageBase64, String imageMime, String diagramBase64,
+    Long subtopicId) {
   public record OptionDto(String label, String optionText, boolean correct, String optionLatex,
       String optionImageBase64) {}
 }

@@ -43,6 +43,17 @@ public class QuestionService {
     return found.stream().map(this::toDto).toList();
   }
 
+  public List<SavedQuestionDto> search(String query, Long subjectId, Long topicId,
+      Long subtopicId, String difficulty, String verificationStatus, String examType, int limit) {
+    List<Question> found = questions.search(
+        query == null || query.isBlank() ? null : query.trim(),
+        subjectId, topicId, subtopicId,
+        difficulty == null ? null : difficulty.toUpperCase(),
+        verificationStatus == null ? null : verificationStatus.toUpperCase(),
+        examType, Math.max(1, Math.min(limit, 200)));
+    return found.stream().map(this::toDto).toList();
+  }
+
   @Transactional
   public SavedQuestionDto verify(Long id, String status) {
     Question q = questions.findById(id).orElseThrow();
@@ -56,6 +67,12 @@ public class QuestionService {
     Question q = questions.findById(id).orElseThrow();
     if (body.containsKey("questionText")) q.setQuestionText((String) body.get("questionText"));
     if (body.containsKey("markdown")) q.setMarkdown((String) body.get("markdown"));
+    if (body.containsKey("latex")) q.setLatex((String) body.get("latex"));
+    if (body.containsKey("subtopicId") && body.get("subtopicId") != null) {
+      try {
+        q.setSubtopicId(Long.valueOf(body.get("subtopicId").toString()));
+      } catch (Exception ignored) {}
+    }
     if (body.containsKey("latex")) q.setLatex((String) body.get("latex"));
     if (body.containsKey("explanation")) q.setExplanation((String) body.get("explanation"));
     if (body.containsKey("tolerance") && body.get("tolerance") instanceof Number n) {
@@ -246,6 +263,7 @@ public class QuestionService {
         q.getDifficulty() == null ? null : q.getDifficulty().name(),
         q.getExamType(), q.getImagePath(),
         q.getVerificationStatus() == null ? null : q.getVerificationStatus().name(),
-        opts, correct, q.getLatex(), q.getImageBase64(), imageMime, q.getDiagramBase64());
+        opts, correct, q.getLatex(), q.getImageBase64(), imageMime, q.getDiagramBase64(),
+        q.getSubtopicId());
   }
 }

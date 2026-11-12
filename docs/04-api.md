@@ -29,7 +29,8 @@ extractor `http://localhost:8001`. Auth: `Authorization: Bearer <JWT>`
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/paper/{paperId}` | `SavedQuestionDto[]` |
-| GET | `/generate?subjectId&topicId&difficulty&examType&count=10` | `SavedQuestionDto[]` |
+| GET | `/generate?subjectId&topicId&difficulty&examType&count=10` | APPROVED only |
+| GET | `/search?query&subjectId&topicId&subtopicId&difficulty&verificationStatus&examType&limit=50` | filtered, newest first |
 | PATCH | `/{id}/verify?status=APPROVED\|REJECTED` | updated DTO |
 | PUT | `/{id}` (JSON map: `questionText,latex,explanation,difficulty,questionType,correctAnswer,correctIntegerAnswer,correctNumericAnswer,tolerance,options[],removeImage`) | updated DTO |
 | POST | `/{id}/image` (multipart `file`, ≤10MB png/jpg) | updated DTO |
@@ -51,8 +52,8 @@ Render images as `data:{imageMime};base64,{imageBase64}`.
 | GET | `/{id}` | one |
 | PUT | `/{id}` | DRAFT/SCHEDULED only, else 409 |
 | POST | `/{id}/publish` | →PUBLISHED |
-| POST | `/{id}/papers` `{paperId}` | `{examId,added}` |
-| POST | `/{id}/questions` `{questionIds:[...]}` | `{examId,added}` |
+| POST | `/{id}/papers` `{paperId}` | `{examId,added}` — 409 when paper has zero APPROVED |
+| POST | `/{id}/questions` `{questionIds:[...]}` | `{examId,added}` — 409 if any id not APPROVED |
 | GET | `/{id}/questions` | `SavedQuestionDto[]` |
 | DELETE | `/{id}/questions/{qid}` | 204 |
 
@@ -85,8 +86,10 @@ JWT with the same secret for `:8080/api/questions/paper/{pid}`.
 
 ## Subjects / Topics (`:8080`, JWT)
 
-`GET /api/subjects`, `GET /api/topics/subject/{subjectId}`
-(+ `POST /api/subjects/seed`, `POST /api/topics/seed` for bootstrapping).
+`GET /api/subjects`, `GET /api/topics/subject/{subjectId}`,
+`GET /api/subtopics/topic/{topicId}`
+(+ `POST /api/subjects/seed`, `POST /api/topics/seed`, `POST /api/subtopics/seed`
+body `[{topicId,name}]` for bootstrapping).
 
 ## Extractor (`:8001`, no auth — localhost only)
 
