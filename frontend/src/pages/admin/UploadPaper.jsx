@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useUploadPdfMutation,
@@ -18,6 +18,7 @@ export default function UploadPaper() {
 
   const [file, setFile] = useState(null);
   const [paperId, setPaperId] = useState('');
+  const fileRef = useRef(null);
   const [meta, setMeta] = useState({ exam: 'JEE', subject: 'physics', topic: '', difficulty: 'medium' });
   const [text, setText] = useState('');
   const [pageCount, setPageCount] = useState(0);
@@ -41,15 +42,26 @@ export default function UploadPaper() {
     return list.find((s) => String(s.name || '').toLowerCase() === String(meta.subject).toLowerCase())?.id;
   };
 
-  const onUpload = async () => {
-    if (!file) return err('Choose a PDF first.');
+  const doUpload = async (f) => {
+    if (!f) return;
     try {
-      const res = await uploadPdf(file).unwrap();
+      const res = await uploadPdf(f).unwrap();
       setPaperId(res.paperId);
       setSavedCount(null);
-      ok(`PDF uploaded (paper ${res.paperId}).`);
+      ok(`“${f.name}” loaded (paper ${res.paperId}). Extraction unlocked.`);
     } catch { err('Upload failed. Is exam API running on :8080?'); }
   };
+
+  const onPickFile = (e) => {
+    const f = e.target.files?.[0] || null;
+    // allow re-picking the same file twice
+    e.target.value = '';
+    if (!f) return;
+    setFile(f);
+    doUpload(f);
+  };
+
+  const onUpload = () => fileRef.current?.click();
 
   const onExtractText = async () => {
     try {
@@ -121,10 +133,32 @@ export default function UploadPaper() {
       <div className="admin-form">
         <section className="card form-section">
           <span className="pill">Step 1 — Upload PDF</span>
-          <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={onPickFile}
+            hidden
+          />
           <div className="admin-actions">
-            <button className="btn" onClick={onUpload} disabled={uploading}>{uploading ? 'Uploading…' : 'Upload'}</button>
+            <button className="btn" onClick={onUpload} disabled={uploading}>
+              {uploading ? 'Loading PDF…' : 'Upload PDF'}
+            </button>
+            {file && !uploading && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => { setFile(null); setPaperId(''); setText(''); setImages([]); setSavedCount(null); }}
+              >
+                Remove
+              </button>
+            )}
           </div>
+          {file && (
+            <p className="muted">
+              Selected: <b>{file.name}</b> ({(file.size / 1024).toFixed(0)} KB)
+              {paperId ? ' — loaded.' : ' — uploading…'}
+            </p>
+          )}
           {paperId && <p className="muted">paperId: {paperId}</p>}
         </section>
 
