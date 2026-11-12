@@ -1,0 +1,9 @@
+fastapi>=0.109
+uvicorn[standard]>=0.27
+transformers>=4.44,<5  # v5 breaks Nougat generate() (EncoderDecoderCache.layers)
+# NOTE: install CPU-only torch to avoid huge CUDA wheels:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch
+torch>=2.2
+pymupdf>=1.23
+pillow>=10.0
+python-multipart>=0.0.9

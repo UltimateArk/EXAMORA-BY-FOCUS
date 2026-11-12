@@ -1,0 +1,26 @@
+# never commit these
+node_modules/
+dist/
+*.log
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# java
+target/
+*.class
+*.jar
+
+# local runtime (recreated by setup docs)
+data/
+storage/
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

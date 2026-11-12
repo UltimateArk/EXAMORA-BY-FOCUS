@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: examora-postgres
+    environment:
+      POSTGRES_DB: examora
+      POSTGRES_USER: examora
+      POSTGRES_PASSWORD: examora
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/V1__init.sql:/docker-entrypoint-initdb.d/V1__init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U examora -d examora"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Nougat TEXT-only extractor (FastAPI :8001).
+  # Uncomment to run alongside postgres.
+  # NOTE: needs ~350MB model download on first use; CPU ~30-60s/page.
+  # extractor:
+  #   build: ./extractor
+  #   container_name: examora-extractor
+  #   environment:
+  #     NOUGAT_ENABLED: "1"
+  #   ports:
+  #     - "8001:8001"
+  #   command: uvicorn app:app --host 0.0.0.0 --port 8001
+
+volumes:
+  pgdata:

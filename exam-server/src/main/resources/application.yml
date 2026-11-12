@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/examora}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+jwt:
+  secret: ${JWT_SECRET:dev-shared-secret-change-me-min-32-bytes-long!!}
+
+extractor:
+  url: ${EXTRACTOR_URL:http://localhost:8001}
+
+storage:
+  dir: ${STORAGE_DIR:./storage}
+
+logging:
+  level:
+    com.examora: INFO

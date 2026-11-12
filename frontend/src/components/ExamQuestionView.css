@@ -1,0 +1,218 @@
+.eqv-card {
+  background: #fff;
+  border: 1px solid #eceef6;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(30, 27, 75, 0.1);
+  padding: clamp(16px, 3vw, 28px);
+  display: grid;
+  gap: 14px;
+  max-width: 100%;
+  animation: eqvFadeUp 0.35s ease both;
+}
+
+.eqv-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.eqv-qnum {
+  font-family: 'Outfit', 'DM Sans', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #1e1b4b;
+}
+
+.eqv-marks {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5042d6;
+  background: #eef0ff;
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+.eqv-type {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #6d64d8;
+  border: 1px solid #dfe3f0;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: #f7f8fc;
+}
+
+.eqv-text {
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #1e1b4b;
+}
+
+.eqv-latex-inline {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  background: #eef0ff;
+  color: #30234f;
+  border-radius: 6px;
+  padding: 1px 7px;
+  overflow-wrap: anywhere;
+}
+
+.eqv-latex-src {
+  margin: 10px 0 4px;
+  border: 1px dashed #c7d2fe;
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: #f5f3ff;
+  max-width: 100%;
+}
+
+.eqv-latex-src > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #5b4ce2;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.eqv-latex-block {
+  background: #1e1b4b;
+  color: #e0e7ff;
+  padding: 14px 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-size: 14px;
+  margin: 8px 0;
+  max-width: 100%;
+}
+
+.eqv-img-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.eqv-img {
+  max-width: 100%;
+  width: auto;
+  max-height: 340px;
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  cursor: zoom-in;
+  display: block;
+  margin: 0 auto;
+}
+
+.eqv-zoom-hint { font-size: 12px; color: #6b7280; }
+
+.eqv-options { display: grid; gap: 10px; }
+
+.eqv-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1.5px solid #dfe3f0;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-height: 44px;
+  font-size: 14px;
+  font-family: 'Manrope', sans-serif;
+  color: #1e1b4b;
+  cursor: default;
+}
+
+.eqv-option:not(:disabled) { cursor: pointer; }
+.eqv-option:not(:disabled):hover { border-color: #5042d6; }
+.eqv-option:focus-visible { outline: 3px solid #5042d6; outline-offset: 2px; }
+
+.eqv-option.is-picked { border-color: #5042d6; background: #eef0ff; }
+.eqv-option.is-correct { border-color: #15803d; background: #dcfce7; }
+
+.eqv-letter {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: #f1f2fa;
+  color: #1e1b4b;
+}
+
+.eqv-option.is-correct .eqv-letter { background: #15803d; color: #fff; }
+
+.eqv-opt-text { flex: 1; overflow-wrap: anywhere; }
+
+.eqv-correct-badge {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #15803d;
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.eqv-integer { display: grid; gap: 10px; }
+
+.eqv-answer-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #dcfce7;
+  border: 1.5px solid #15803d;
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.eqv-answer-label { font-weight: 700; color: #166534; }
+.eqv-answer-value { font-weight: 800; font-size: 17px; color: #14532d; }
+
+.eqv-field { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
+
+.eqv-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(30, 27, 75, 0.85);
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.eqv-lightbox img {
+  max-width: min(92vw, 1000px);
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.eqv-lightbox-close { color: #e0e7ff; font-size: 13px; }
+
+@keyframes eqvFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 560px) {
+  .eqv-img { max-height: 240px; }
+  .eqv-text { font-size: 14px; }
+}

@@ -1,0 +1,11 @@
+.admin h2 { font-family: 'Outfit', sans-serif; }
+.steps { display: grid; gap: 16px; }
+.steps .card { display: grid; gap: 12px; }
+.muted { color: #6b7280; font-size: 13px; }
+.img-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.img-row img { width: 160px; height: 110px; object-fit: cover; border-radius: 12px; border: 1px solid #e5e7eb; }
+.saved-list { display: grid; gap: 14px; margin-top: 12px; }
+.q-card { border-radius: 19px; }
+.q-img { max-width: 100%; border-radius: 14px; border: 1px solid #e5e7eb; }
+.opts { list-style: none; padding: 0; display: grid; gap: 6px; }
+.latex { background: #1e1b4b; color: #e0e7ff; padding: 12px; border-radius: 12px; overflow: auto; }
