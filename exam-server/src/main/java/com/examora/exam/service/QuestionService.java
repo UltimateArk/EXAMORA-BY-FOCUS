@@ -102,8 +102,8 @@ public class QuestionService {
         if (o instanceof Map<?, ?> om) {
           QuestionOption qo = new QuestionOption();
           qo.setQuestion(q);
-          qo.setLabel(String.valueOf(om.getOrDefault("label", "A")));
-          qo.setOptionText(String.valueOf(om.getOrDefault("optionText", "")));
+          qo.setLabel(om.get("label") != null ? String.valueOf(om.get("label")) : "A");
+          qo.setOptionText(om.get("optionText") != null ? String.valueOf(om.get("optionText")) : "");
           if (om.get("optionLatex") != null) qo.setOptionLatex(String.valueOf(om.get("optionLatex")));
           Object c = om.get("correct");
           qo.setCorrect(c instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(c)));

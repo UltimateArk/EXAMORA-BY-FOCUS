@@ -50,9 +50,9 @@ public class NougatClient {
       for (JsonNode p : pages) {
         int n = p.has("pageNumber") ? p.get("pageNumber").asInt()
             : p.has("page_number") ? p.get("page_number").asInt() : out.size() + 1;
-        String text = p.has("extractedText") ? p.get("extractedText").asString()
-            : p.has("markdown") ? p.get("markdown").asString()
-            : p.has("text") ? p.get("text").asString() : "";
+        String text = p.has("extractedText") ? p.get("extractedText").asText()
+            : p.has("markdown") ? p.get("markdown").asText()
+            : p.has("text") ? p.get("text").asText() : "";
         out.add(new PageText(n, text));
       }
     }
