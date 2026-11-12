@@ -71,7 +71,7 @@ export default function UploadPaper() {
           await attachPaper({ examId: selectedExamId, paperId: pid }).unwrap();
           ok(`${res.savedCount ?? 0} questions ready and linked to the selected test.`);
         } catch {
-          ok(`${res.savedCount ?? 0} questions ready (paper ${pid}). Linking to the test failed — retry from Tests.`);
+          ok(`${res.savedCount ?? 0} questions ready (reference ${pid}). Could not link to the test — retry from Exams.`);
         }
       } else {
         ok(`${res.savedCount ?? 0} questions ready.`);
@@ -94,7 +94,7 @@ export default function UploadPaper() {
       setPaperId(res.paperId);
       await runPipeline(res.paperId);
     } catch {
-      err('Upload failed. Is the exam service running?');
+      err('Upload failed. Please try again.');
     }
   };
 
@@ -124,7 +124,7 @@ export default function UploadPaper() {
 
       <div className="admin-form">
         <section className="card form-section">
-          <span className="pill">1. Choose scheduled test</span>
+          <span className="pill">1. Upload</span>
           {exams.length === 0 ? (
             <p className="muted">
               No tests yet. <Link to="/admin" style={{ fontWeight: 800, textDecoration: 'underline' }}>Schedule a test first</Link> or continue without one.
@@ -181,7 +181,7 @@ export default function UploadPaper() {
         </section>
 
         <section className="card form-section">
-          <span className="pill">3. Upload PDF</span>
+          <span className="pill">3. Prepare</span>
           <input
             ref={fileRef}
             type="file"
@@ -208,7 +208,7 @@ export default function UploadPaper() {
               {paperId ? ' — uploaded.' : ' — uploading…'}
             </p>
           )}
-          {paperId && <p className="muted">paperId: {paperId}</p>}
+          {paperId && <p className="muted">Paper reference: {paperId}</p>}
           {(uploading || processing) && (
             <div className="prepare-progress" aria-live="polite">
               <span className="spinner" aria-hidden="true" />

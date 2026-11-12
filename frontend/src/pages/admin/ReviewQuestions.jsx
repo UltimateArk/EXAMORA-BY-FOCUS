@@ -96,7 +96,7 @@ export default function ReviewQuestions() {
       setBanner({ type: 'success', msg: `Question ${status.toLowerCase()}.` });
       refetch();
     } catch {
-      setBanner({ type: 'error', msg: 'Verify call failed.' });
+      setBanner({ type: 'error', msg: 'Could not save. Please try again.' });
     }
   };
 
@@ -116,7 +116,7 @@ export default function ReviewQuestions() {
         setBanner({ type: 'success', msg: 'Question approved.' });
       }
     } catch {
-      setBanner({ type: 'error', msg: 'Approve call failed.' });
+      setBanner({ type: 'error', msg: 'Could not approve. Please try again.' });
     }
   };
 
@@ -131,7 +131,7 @@ export default function ReviewQuestions() {
         setBanner({ type: 'error', msg: `${e?.data?.pending ?? 'Some'} questions still need review.` });
         refetch();
       } else {
-        setBanner({ type: 'error', msg: 'Submit failed. Try again.' });
+        setBanner({ type: 'error', msg: 'Could not submit. Please try again.' });
       }
     }
   };
@@ -238,7 +238,7 @@ export default function ReviewQuestions() {
         : { type: 'success', msg: 'Question updated.' });
       refetch();
     } catch {
-      setBanner({ type: 'error', msg: 'Update failed.' });
+      setBanner({ type: 'error', msg: 'Could not save changes. Please try again.' });
     }
   };
 
@@ -276,12 +276,12 @@ export default function ReviewQuestions() {
 
       <div className="card review-toolbar">
         <label className="field review-paper-field">
-          Paper ID
+          Paper reference
           <input
             className="input"
             value={paperInput}
             onChange={(e) => setPaperInput(e.target.value)}
-            placeholder="paper_123"
+            placeholder="Enter paper reference"
           />
         </label>
         <button className="btn" onClick={loadPaper}>Load paper</button>
@@ -307,7 +307,7 @@ export default function ReviewQuestions() {
       {!paperId && (
         <div className="card empty">
           <h3>No paper loaded</h3>
-          <p>Enter a paper ID above (or pick one from the exam dropdown) to start reviewing.</p>
+          <p>Enter a paper reference above (or pick one from the list) to start reviewing.</p>
         </div>
       )}
 

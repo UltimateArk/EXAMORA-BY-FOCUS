@@ -51,7 +51,7 @@ export default function Login() {
       const token = res.token || res.accessToken || res.access_token;
       const role = String(res.role || res.user?.role || res.data?.role || '').toUpperCase();
       if (!token) {
-        setBanner({ type: 'error', msg: 'Login failed: no token returned.' });
+        setBanner({ type: 'error', msg: 'Login failed. Please try again.' });
         return;
       }
       localStorage.setItem('token', token);
@@ -64,7 +64,7 @@ export default function Login() {
       }
       navigate('/admin');
     } catch {
-      setBanner({ type: 'error', msg: 'Login failed. Check credentials or auth service.' });
+      setBanner({ type: 'error', msg: 'Login failed. Check your email and password and try again.' });
     }
   };
 

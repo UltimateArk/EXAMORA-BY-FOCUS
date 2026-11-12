@@ -75,17 +75,17 @@ export default function Dashboard() {
           <div style={{ marginTop: 16 }}>
             <button className="btn" disabled={isLoading}>{isLoading ? 'Generating…' : 'Generate paper'}</button>
           </div>
-          {error && <div className="banner error">Generate failed. Check the exam server.</div>}
+          {error && <div className="banner error">Could not generate. Please try again.</div>}
           {data && <div className="banner success">Generated {Array.isArray(data) ? data.length : (data?.questions?.length ?? data?.count ?? '')} questions.</div>}
         </form>
 
         <div className="card">
           <h3 style={{ marginTop: 0 }}>How it works</h3>
-          <p>1. Upload a PDF → 2. Extract text + images → 3. Save & verify → 4. Generate exams.</p>
+          <p>1. Upload a paper → 2. Read questions → 3. Check & approve → 4. Build exams.</p>
           <div className="form-row">
-            <span className="pill">Nougat OCR</span>
-            <span className="pill">PDFBox images</span>
-            <span className="pill">RTK Query</span>
+            <span className="pill">Reads questions</span>
+            <span className="pill">Shows pages</span>
+            <span className="pill">Saves instantly</span>
           </div>
         </div>
       </div>

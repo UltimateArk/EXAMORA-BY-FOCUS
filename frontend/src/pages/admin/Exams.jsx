@@ -22,7 +22,7 @@ export default function Exams() {
     if (statusOf(ex) === 'PUBLISHED') {
       // Backend has no unpublish — keep local only
       setOverrides((o) => ({ ...o, [id]: 'DRAFT' }));
-      setBanner({ type: 'info', msg: 'Unpublished locally. Backend keeps PUBLISHED status.' });
+      setBanner({ type: 'info', msg: 'Unpublished on this device. The server still shows it as published.' });
       return;
     }
     try {
@@ -30,7 +30,7 @@ export default function Exams() {
       setBanner({ type: 'success', msg: 'Exam published.' });
     } catch {
       setOverrides((o) => ({ ...o, [id]: 'PUBLISHED' }));
-      setBanner({ type: 'info', msg: 'Publish API unavailable — change kept locally for this session.' });
+      setBanner({ type: 'info', msg: 'Could not reach the server — change kept on this device for now.' });
     }
   };
 

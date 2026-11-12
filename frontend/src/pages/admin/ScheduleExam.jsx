@@ -60,7 +60,7 @@ export default function ScheduleExam() {
       setBanner({ type: 'success', msg: `Exam scheduled${id ? ` (ID: ${id})` : ''}.` });
       if (id) setTimeout(() => navigate(`/admin/upload?examId=${id}`), 1500);
     } catch {
-      setBanner({ type: 'error', msg: 'Scheduling failed. Is the exam API running?' });
+      setBanner({ type: 'error', msg: 'Could not schedule. Please try again.' });
     }
   };
 

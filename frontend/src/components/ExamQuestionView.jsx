@@ -111,7 +111,7 @@ export default function ExamQuestionView({
 
       {mode === 'preview' && n.latex && (
         <details className="eqv-latex-src">
-          <summary>LaTeX source (stored)</summary>
+          <summary>Math source</summary>
           <pre className="eqv-latex-block">{n.latex}</pre>
         </details>
       )}

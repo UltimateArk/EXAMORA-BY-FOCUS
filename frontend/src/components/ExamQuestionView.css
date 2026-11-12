@@ -133,7 +133,7 @@
 }
 
 .eqv-option:not(:disabled) { cursor: pointer; }
-.eqv-option:not(:disabled):hover { border-color: #5042d6; }
+.eqv-option:not(:disabled):hover { border-color: #5042d6; background: #eef0ff; color: #1e1b4b; }
 .eqv-option:focus-visible { outline: 3px solid #5042d6; outline-offset: 2px; }
 
 .eqv-option.is-picked { border-color: #5042d6; background: #eef0ff; }

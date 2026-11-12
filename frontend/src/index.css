@@ -78,11 +78,22 @@ a { color: inherit; text-decoration: none; }
   color: #fff;
   font-family: 'Manrope', sans-serif;
 }
-.btn:hover { background: var(--btn-blue-hover); }
+.btn:not(:disabled):hover { background: var(--btn-blue-hover); color: #fff; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-green { background: var(--save-green); }
+.btn:disabled:hover { background: var(--btn-blue); color: #fff; }
+.btn-green { background: var(--save-green); color: #fff; }
+.btn-green:not(:disabled):hover { background: #166534; border-color: #166534; color: #fff; }
+.btn-green:disabled:hover { background: var(--save-green); color: #fff; }
 .btn-ghost { background: #eef0ff; color: var(--primary); }
+.btn-ghost:not(:disabled):hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-ghost:disabled:hover { background: #eef0ff; color: var(--primary); }
 .btn-danger-ghost { background: var(--error-bg); color: var(--error-text); }
+.btn-danger-ghost:not(:disabled):hover { background: var(--error-text); border-color: var(--error-text); color: #fff; }
+.btn-danger-ghost:disabled:hover { background: var(--error-bg); color: var(--error-text); }
+.btn:focus-visible, .btn-green:focus-visible, .btn-ghost:focus-visible, .btn-danger-ghost:focus-visible {
+  outline: 3px solid #5042d6;
+  outline-offset: 2px;
+}
 
 .input, .select, .textarea {
   width: 100%;
