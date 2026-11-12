@@ -107,6 +107,12 @@ public class QuestionService {
           if (om.get("optionLatex") != null) qo.setOptionLatex(String.valueOf(om.get("optionLatex")));
           Object c = om.get("correct");
           qo.setCorrect(c instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(c)));
+          if (om.get("optionImageBase64") != null) {
+            qo.setOptionImageBase64(String.valueOf(om.get("optionImageBase64")));
+          }
+          if (om.get("optionImagePath") != null) {
+            qo.setOptionImagePath(String.valueOf(om.get("optionImagePath")));
+          }
           options.save(qo);
         }
       }
@@ -152,6 +158,42 @@ public class QuestionService {
     return toDto(questions.save(q));
   }
 
+  @Transactional
+  public SavedQuestionDto replaceOptionImage(Long questionId, String label, MultipartFile file) {
+    Question q = questions.findById(questionId).orElseThrow(() ->
+        new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found: " + questionId));
+    validateImage(file);
+    QuestionOption opt = options.findByQuestionId(questionId).stream()
+        .filter(o -> o.getLabel() != null && o.getLabel().equalsIgnoreCase(label))
+        .findFirst()
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "Option not found: " + label));
+    try {
+      int n = q.getQuestionNumber() != null ? q.getQuestionNumber() : q.getId().intValue();
+      Long paperId = q.getPaper() != null ? q.getPaper().getId() : null;
+      if (paperId == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            "Question has no paper; cannot store image");
+      }
+      String upper = opt.getLabel().toUpperCase();
+      String fileName = "question-" + n + "-opt-" + upper + ".png";
+      storage.saveQuestionImage(paperId, fileName, file);
+      opt.setOptionImagePath("papers/" + paperId + "/" + fileName);
+      try {
+        opt.setOptionImageBase64(java.util.Base64.getEncoder().encodeToString(file.getBytes()));
+      } catch (Exception e) {
+        opt.setOptionImageBase64(null);
+      }
+      options.save(opt);
+      return toDto(questions.save(q));
+    } catch (ResponseStatusException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+          "Failed to store option image", e);
+    }
+  }
+
   private void validateImage(MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is required");
@@ -175,7 +217,7 @@ public class QuestionService {
     Long qid = q.getId();
     List<SavedQuestionDto.OptionDto> opts = options.findByQuestionId(qid).stream()
         .map(o -> new SavedQuestionDto.OptionDto(o.getLabel(), o.getOptionText(), o.isCorrect(),
-            o.getOptionLatex()))
+            o.getOptionLatex(), o.getOptionImageBase64()))
         .toList();
     String correct = null;
     if (q.getCorrectIntegerAnswer() != null) correct = String.valueOf(q.getCorrectIntegerAnswer());

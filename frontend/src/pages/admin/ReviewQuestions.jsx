@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ExamQuestionView, { normalizeQuestion } from '../../components/ExamQuestionView.jsx';
 import {
   useSavedQuestionsQuery,
   useVerifyQuestionMutation,
   useUpdateQuestionMutation,
   useUploadQuestionImageMutation,
-  useListExamsQuery
+  useUploadOptionImageMutation,
+  useSubmitPaperMutation,
+  useListExamsQuery,
+  optionImageSrc
 } from '../../services/examApi.js';
 
 function asList(data) {
@@ -19,6 +22,7 @@ const qid = (q, i) => String(q?.id ?? q?._id ?? `idx-${i}`);
 
 export default function ReviewQuestions() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const paperId = searchParams.get('paperId') || '';
   const [paperInput, setPaperInput] = useState(paperId);
 
@@ -30,6 +34,8 @@ export default function ReviewQuestions() {
   const [verify, { isLoading: verifying }] = useVerifyQuestionMutation();
   const [updateQuestion, { isLoading: savingEdit }] = useUpdateQuestionMutation();
   const [uploadImage, { isLoading: uploadingImg }] = useUploadQuestionImageMutation();
+  const [uploadOptionImage, { isLoading: uploadingOptImg }] = useUploadOptionImageMutation();
+  const [submitPaper, { isLoading: submitting }] = useSubmitPaperMutation();
 
   const list = useMemo(() => asList(data), [data]);
   const [idx, setIdx] = useState(0);
@@ -39,6 +45,8 @@ export default function ReviewQuestions() {
   const [editMode, setEditMode] = useState(false);
   const [draft, setDraft] = useState(null);
   const [imgFile, setImgFile] = useState(null);
+  const [optImgFiles, setOptImgFiles] = useState({});
+  const [done, setDone] = useState(false);
   const cardRef = useRef(null);
 
   const safeIdx = list.length ? Math.min(idx, list.length - 1) : 0;
@@ -46,7 +54,7 @@ export default function ReviewQuestions() {
   const currentId = current ? qid(current, safeIdx) : null;
   const norm = useMemo(() => (current ? normalizeQuestion(current) : null), [current]);
 
-  useEffect(() => { setIdx(0); setSeen([]); setEditMode(false); setDraft(null); }, [paperId]);
+  useEffect(() => { setIdx(0); setSeen([]); setEditMode(false); setDraft(null); setDone(false); setOptImgFiles({}); }, [paperId]);
 
   useEffect(() => {
     if (currentId && !seen.includes(currentId)) setSeen((s) => [...s, currentId]);
@@ -70,10 +78,11 @@ export default function ReviewQuestions() {
   }, [list.length, safeIdx]);
 
   const go = (d) => {
+    setDone(false);
     setEditMode(false);
     setIdx((i) => Math.min(Math.max(i + d, 0), Math.max(list.length - 1, 0)));
   };
-  const jump = (i) => { setEditMode(false); setIdx(i); };
+  const jump = (i) => { setDone(false); setEditMode(false); setIdx(i); };
 
   const loadPaper = () => {
     if (!paperInput.trim()) return;
@@ -91,6 +100,42 @@ export default function ReviewQuestions() {
     }
   };
 
+  const approveAndNext = async () => {
+    if (!current) return;
+    try {
+      await verify({ id: current.id ?? current._id, status: 'APPROVED' }).unwrap();
+      const res = await refetch();
+      const fresh = asList(res?.data ?? data);
+      const len = fresh.length || list.length;
+      if (safeIdx >= len - 1) {
+        setDone(true);
+        setBanner({ type: 'success', msg: 'All questions reviewed. Submit the paper below to finish.' });
+      } else {
+        setEditMode(false);
+        setIdx((i) => Math.min(i + 1, Math.max(len - 1, 0)));
+        setBanner({ type: 'success', msg: 'Question approved.' });
+      }
+    } catch {
+      setBanner({ type: 'error', msg: 'Approve call failed.' });
+    }
+  };
+
+  const doSubmit = async () => {
+    if (!paperId || pendingCount > 0) return;
+    try {
+      const res = await submitPaper(paperId).unwrap();
+      setBanner({ type: 'success', msg: `Paper submitted with ${res.submitted ?? list.length} questions.` });
+      setTimeout(() => navigate('/admin/exams'), 1200);
+    } catch (e) {
+      if (e?.status === 409) {
+        setBanner({ type: 'error', msg: `${e?.data?.pending ?? 'Some'} questions still need review.` });
+        refetch();
+      } else {
+        setBanner({ type: 'error', msg: 'Submit failed. Try again.' });
+      }
+    }
+  };
+
   const doFlag = () => {
     if (!currentId) return;
     setFlagged((f) => (f.includes(currentId) ? f.filter((x) => x !== currentId) : [...f, currentId]));
@@ -100,17 +145,25 @@ export default function ReviewQuestions() {
   const startEdit = () => {
     if (!norm) return;
     const isMulti = norm.kind === 'MULTI' || norm.correctIndices.length > 1;
+    const rawOpts = Array.isArray(current.options) ? current.options : [];
     setDraft({
       questionText: norm.text,
       explanation: norm.explanation,
       difficulty: norm.difficulty || 'medium',
       topic: norm.topic || '',
-      options: norm.options.length ? norm.options.map((o) => ({ ...o })) : [{ text: '', correct: false }],
+      options: norm.options.length
+        ? norm.options.map((o, i) => ({
+            ...o,
+            image: optionImageSrc(rawOpts[i]),
+            optionImageBase64: rawOpts[i]?.optionImageBase64 ?? rawOpts[i]?.option_image_base64 ?? null
+          }))
+        : [{ text: '', correct: false, image: null, optionImageBase64: null }],
       isMulti,
       correctAnswer: norm.correctAnswer ?? '',
       tolerance: current.tolerance ?? ''
     });
     setImgFile(null);
+    setOptImgFiles({});
     setEditMode(true);
   };
 
@@ -148,19 +201,41 @@ export default function ReviewQuestions() {
         explanation: draft.explanation,
         difficulty: draft.difficulty,
         topic: draft.topic,
-        options: draft.options.map((o, i) => ({
-          label: o.label || 'ABCD'[i] || `OPT${i + 1}`,
-          optionText: o.text,
-          optionLatex: o.latex || o.text,
-          correct: o.correct
-        })),
+        options: draft.options.map((o, i) => {
+          const opt = {
+            label: o.label || 'ABCD'[i] || `OPT${i + 1}`,
+            optionText: o.text,
+            optionLatex: o.latex || o.text,
+            correct: o.correct
+          };
+          // Keep the stored figure when only text changes (backend only
+          // overwrites the figure when this key is present).
+          if (o.optionImageBase64) opt.optionImageBase64 = o.optionImageBase64;
+          return opt;
+        }),
         correctAnswer: draft.correctAnswer,
         tolerance: draft.tolerance === '' ? undefined : Number(draft.tolerance)
       };
       await updateQuestion({ id, ...body }).unwrap();
+      // Option figure replacements go through their own endpoint AFTER the
+      // text save, so the save above cannot wipe them.
+      let optImgFailed = false;
+      for (const [i, f] of Object.entries(optImgFiles)) {
+        if (!f) continue;
+        const o = draft.options[Number(i)];
+        const label = o?.label || 'ABCD'[Number(i)] || `OPT${Number(i) + 1}`;
+        try {
+          await uploadOptionImage({ id, label, file: f }).unwrap();
+        } catch {
+          optImgFailed = true;
+        }
+      }
       setEditMode(false);
       setImgFile(null);
-      setBanner({ type: 'success', msg: 'Question updated.' });
+      setOptImgFiles({});
+      setBanner(optImgFailed
+        ? { type: 'error', msg: 'Question updated, but an option figure failed to upload.' }
+        : { type: 'success', msg: 'Question updated.' });
       refetch();
     } catch {
       setBanner({ type: 'error', msg: 'Update failed.' });
@@ -180,6 +255,8 @@ export default function ReviewQuestions() {
 
   const exams = Array.isArray(examsData) ? examsData : (examsData?.items || examsData?.exams || []);
   const progress = list.length ? Math.round(((safeIdx + 1) / list.length) * 100) : 0;
+  const reviewedCount = list.filter((q) => statusOf(q) !== 'PENDING').length;
+  const pendingCount = list.length - reviewedCount;
 
   const dotClass = (q, i) => {
     const id = qid(q, i);
@@ -260,6 +337,7 @@ export default function ReviewQuestions() {
           <div className="review-meta">
             <span className={`status-pill ${statusOf(current).toLowerCase()}`}>{statusOf(current)}</span>
             <span className="muted">Question {safeIdx + 1} of {list.length}</span>
+            <span className="muted">Reviewed {reviewedCount} of {list.length}</span>
           </div>
 
           <div className="progress" aria-label="Review progress">
@@ -281,19 +359,42 @@ export default function ReviewQuestions() {
             ))}
           </div>
 
-          <div ref={cardRef}>
-            <ExamQuestionView question={current} index={safeIdx} mode="preview" />
-          </div>
+          {done ? (
+            <div className="card empty">
+              <h3>All questions reviewed</h3>
+              <p>Reviewed {reviewedCount} of {list.length}. Submit the paper below to finish.</p>
+              <button className="btn btn-ghost" onClick={() => setDone(false)}>Back to questions</button>
+            </div>
+          ) : (
+            <div ref={cardRef}>
+              <ExamQuestionView question={current} index={safeIdx} mode="preview" />
+            </div>
+          )}
 
           <div className="review-nav">
             <button className="btn btn-ghost" onClick={() => go(-1)} disabled={safeIdx === 0}>← Prev</button>
             <button className="btn btn-ghost" onClick={() => go(1)} disabled={safeIdx >= list.length - 1}>Next →</button>
           </div>
 
+          <div className="card submit-bar">
+            <span className="muted">
+              Reviewed {reviewedCount} of {list.length}
+              {pendingCount > 0 ? ` · ${pendingCount} still waiting` : ' · ready to submit'}
+            </span>
+            <button
+              className="btn btn-green"
+              onClick={doSubmit}
+              disabled={pendingCount > 0 || submitting || list.length === 0}
+              title={pendingCount > 0 ? 'Review every question first' : 'Submit paper'}
+            >
+              {submitting ? 'Submitting…' : 'Submit paper'}
+            </button>
+          </div>
+
           {!editMode ? (
             <div className="card verify-row">
               <div className="admin-actions">
-                <button className="btn btn-green" onClick={() => doVerify('APPROVED')} disabled={verifying}>Approve</button>
+                <button className="btn btn-green" onClick={approveAndNext} disabled={verifying}>Approve &amp; Next</button>
                 <button className="btn btn-danger-ghost" onClick={() => doVerify('REJECTED')} disabled={verifying}>Reject</button>
                 <button className="btn btn-ghost" onClick={doFlag}>Flag for review</button>
                 <button className="btn btn-ghost" onClick={startEdit}>Edit</button>
@@ -313,7 +414,7 @@ export default function ReviewQuestions() {
                       Multiple correct answers
                     </label>
                     {draft.options.map((o, i) => (
-                      <div key={i} className="opt-edit">
+                      <div key={i} className="opt-fig">
                         <input
                           type={draft.isMulti ? 'checkbox' : 'radio'}
                           name="correct-opt"
@@ -330,6 +431,17 @@ export default function ReviewQuestions() {
                           })}
                           placeholder={`Option ${'ABCD'[i] || i + 1}`}
                         />
+                        <div>
+                          {o.image
+                            ? <img src={o.image} alt={`Option ${'ABCD'[i] || i + 1} figure`} />
+                            : <span className="muted">No figure</span>}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setOptImgFiles((m) => ({ ...m, [i]: e.target.files?.[0] || null }))}
+                            aria-label={`Replace option ${'ABCD'[i] || i + 1} figure`}
+                          />
+                        </div>
                       </div>
                     ))}
                   </>
@@ -367,10 +479,10 @@ export default function ReviewQuestions() {
                   </div>
                 </div>
                 <div className="admin-actions">
-                  <button className="btn btn-green" onClick={saveEdit} disabled={savingEdit || uploadingImg}>
-                    {savingEdit || uploadingImg ? 'Saving…' : 'Save changes'}
+                  <button className="btn btn-green" onClick={saveEdit} disabled={savingEdit || uploadingImg || uploadingOptImg}>
+                    {savingEdit || uploadingImg || uploadingOptImg ? 'Saving…' : 'Save changes'}
                   </button>
-                  <button className="btn btn-ghost" onClick={() => { setEditMode(false); setDraft(null); setImgFile(null); }}>
+                  <button className="btn btn-ghost" onClick={() => { setEditMode(false); setDraft(null); setImgFile(null); setOptImgFiles({}); }}>
                     Cancel
                   </button>
                 </div>

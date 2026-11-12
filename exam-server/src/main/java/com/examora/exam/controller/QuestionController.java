@@ -51,6 +51,14 @@ public class QuestionController {
     return service.replaceImage(id, file);
   }
 
+  @PostMapping(value = "/{qid}/options/{label}/image",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public SavedQuestionDto replaceOptionImage(@PathVariable Long qid,
+      @PathVariable String label,
+      @RequestParam("file") MultipartFile file) {
+    return service.replaceOptionImage(qid, label, file);
+  }
+
   @DeleteMapping("/{id}/image")
   public SavedQuestionDto clearImage(@PathVariable Long id) {
     return service.clearImage(id);

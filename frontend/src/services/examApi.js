@@ -45,6 +45,25 @@ export const examApi = createApi({
       },
       invalidatesTags: ['Questions']
     }),
+    processPaper: builder.mutation({
+      // One-shot pipeline: {paperId, examType?, subjectId?, topicId?, difficulty?}
+      // -> POST /api/admin/process-paper/{paperId}
+      // -> {paperId, pages, questionsFound, savedCount, answerKeyApplied}
+      query: ({ paperId, examType, subjectId, topicId, difficulty }) => {
+        const params = {};
+        if (examType) params.examType = examType;
+        if (subjectId != null && subjectId !== '') params.subjectId = subjectId;
+        if (topicId != null && topicId !== '') params.topicId = topicId;
+        if (difficulty) params.difficulty = difficulty;
+        return { url: `/api/admin/process-paper/${paperId}`, method: 'POST', params };
+      },
+      invalidatesTags: ['Questions']
+    }),
+    submitPaper: builder.mutation({
+      // paperId -> POST /api/admin/papers/{paperId}/submit
+      // -> {paperId, submitted} or 409 {paperId, pending}
+      query: (paperId) => ({ url: `/api/admin/papers/${paperId}/submit`, method: 'POST' })
+    }),
     savedQuestions: builder.query({
       // paperId (or {paperId}) -> GET /api/questions/paper/{paperId} -> SavedQuestionDto[]
       query: (params) => {
@@ -120,6 +139,15 @@ export const examApi = createApi({
         return { url: `/api/questions/${id}/image`, method: 'POST', body: fd };
       },
       invalidatesTags: ['Questions']
+    }),
+    uploadOptionImage: builder.mutation({
+      // { id, label, file } — replaces one option's figure
+      query: ({ id, label, file }) => {
+        const fd = new FormData();
+        fd.append('file', file);
+        return { url: `/api/questions/${id}/options/${label}/image`, method: 'POST', body: fd };
+      },
+      invalidatesTags: ['Questions']
     })
   })
 });
@@ -129,6 +157,8 @@ export const {
   useExtractTextMutation,
   useExtractQuestionImagesMutation,
   useSaveExtractedMutation,
+  useProcessPaperMutation,
+  useSubmitPaperMutation,
   useSavedQuestionsQuery,
   useGenerateMutation,
   useSubjectsQuery,
@@ -142,7 +172,8 @@ export const {
   useAttachPaperMutation,
   useExamQuestionsQuery,
   useUpdateQuestionMutation,
-  useUploadQuestionImageMutation
+  useUploadQuestionImageMutation,
+  useUploadOptionImageMutation
 } = examApi;
 
 /** Build a servable URL for a stored imagePath ("papers/{paperId}/{file}"). */
@@ -166,4 +197,12 @@ export function questionImageSrc(q) {
     return `data:${mime};base64,${q.imageBase64}`;
   }
   return questionImageUrl(q.paperId ?? q.paper_id, q.imagePath ?? q.image_path);
+}
+
+/** Option figure: embedded base64 -> data URI (options have no served-file fallback). */
+export function optionImageSrc(o) {
+  if (!o) return null;
+  const b64 = o.optionImageBase64 ?? o.option_image_base64;
+  if (!b64) return null;
+  return `data:image/png;base64,${b64}`;
 }

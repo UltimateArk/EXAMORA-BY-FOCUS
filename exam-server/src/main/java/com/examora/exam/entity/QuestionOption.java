@@ -22,6 +22,9 @@ public class QuestionOption {
   @Column(name = "option_image_path")
   private String optionImagePath;
 
+  @Column(name = "option_image_base64", columnDefinition = "TEXT")
+  private String optionImageBase64;
+
   @Column(name = "option_latex", columnDefinition = "TEXT")
   private String optionLatex;
 
@@ -38,6 +41,10 @@ public class QuestionOption {
   public void setOptionText(String optionText) { this.optionText = optionText; }
   public String getOptionImagePath() { return optionImagePath; }
   public void setOptionImagePath(String p) { this.optionImagePath = p; }
+  public String getOptionImageBase64() { return optionImageBase64; }
+  public void setOptionImageBase64(String optionImageBase64) {
+    this.optionImageBase64 = optionImageBase64;
+  }
   public String getOptionLatex() { return optionLatex; }
   public void setOptionLatex(String optionLatex) { this.optionLatex = optionLatex; }
   public boolean isCorrect() { return correct; }

@@ -6,8 +6,10 @@ import com.examora.exam.dto.PageText;
 import com.examora.exam.dto.QuestionRegionDto;
 import com.examora.exam.dto.QuestionSaveResponse;
 import com.examora.exam.dto.UploadResponse;
+import com.examora.exam.entity.Question;
 import com.examora.exam.entity.QuestionPaper;
 import com.examora.exam.repo.QuestionPaperRepository;
+import com.examora.exam.repo.QuestionRepository;
 import com.examora.exam.service.ExtractionService;
 import com.examora.exam.service.PdfImageService;
 import com.examora.exam.service.StorageService;
@@ -25,12 +27,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdminController {
 
   private final QuestionPaperRepository papers;
+  private final QuestionRepository questions;
   private final StorageService storage;
   private final ExtractionService extraction;
 
-  public AdminController(QuestionPaperRepository papers, StorageService storage,
-      ExtractionService extraction) {
+  public AdminController(QuestionPaperRepository papers, QuestionRepository questions,
+      StorageService storage, ExtractionService extraction) {
     this.papers = papers;
+    this.questions = questions;
     this.storage = storage;
     this.extraction = extraction;
   }
@@ -73,6 +77,30 @@ public class AdminController {
       @RequestParam(required = false, defaultValue = "MEDIUM") String difficulty) {
     int n = extraction.saveExtracted(paperId, examType, subjectId, topicId, difficulty);
     return new QuestionSaveResponse(n);
+  }
+
+  @PostMapping("/process-paper/{paperId}")
+  public Map<String, Object> processPaper(@PathVariable Long paperId,
+      @RequestParam(required = false) String examType,
+      @RequestParam(required = false) Long subjectId,
+      @RequestParam(required = false) Long topicId,
+      @RequestParam(required = false, defaultValue = "MEDIUM") String difficulty) {
+    return extraction.processPaper(paperId, examType, subjectId, topicId, difficulty);
+  }
+
+  @PostMapping("/papers/{paperId}/submit")
+  public ResponseEntity<Map<String, Object>> submitPaper(@PathVariable Long paperId) {
+    QuestionPaper paper = papers.findById(paperId).orElseThrow();
+    List<Question> qs = questions.findByPaperId(paperId);
+    long pending = qs.stream()
+        .filter(q -> q.getVerificationStatus() == Question.VerificationStatus.PENDING)
+        .count();
+    if (pending > 0) {
+      return ResponseEntity.status(409).body(Map.of("paperId", paperId, "pending", pending));
+    }
+    paper.setStatus(QuestionPaper.Status.SUBMITTED);
+    papers.save(paper);
+    return ResponseEntity.ok(Map.of("paperId", paperId, "submitted", qs.size()));
   }
 
   @GetMapping("/images/{paperId}/page-{page}.png")

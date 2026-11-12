@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "question_papers")
 public class QuestionPaper {
-  public enum Status { UPLOADED, EXTRACTING, EXTRACTED, FAILED }
+  public enum Status { UPLOADED, EXTRACTING, EXTRACTED, FAILED, SUBMITTED }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

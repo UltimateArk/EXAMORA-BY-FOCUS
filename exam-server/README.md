@@ -24,7 +24,9 @@ DB DDL auto-updates (`spring.jpa.hibernate.ddl-auto=update`); canonical SQL is
 | POST | `/api/admin/upload-pdf` (multipart `file`) | JWT | → `{paperId,fileName,message}` |
 | GET | `/api/admin/extract-text/{paperId}` | JWT | Calls extractor `/extract`, → `{paperId,fileName,pages:[{pageNumber,extractedText}],images:[],questions:[]}` |
 | GET | `/api/admin/extract-question-images/{paperId}` | JWT | PDFBox render → `{paperId,fileName,images:[{pageNumber,imagePath}],questions:[{questionNumber,pageNumber,x,y,width,height,questionText}]}` |
-| POST | `/api/admin/save-extracted-questions/{paperId}?examType=&subjectId=&topicId=&difficulty=` | JWT | → `{savedCount}` |
+| POST | `/api/admin/save-extracted-questions/{paperId}?examType=&subjectId=&topicId=&difficulty=` | JWT | → `{savedCount}` (idempotent: clears this paper's rows first) |
+| POST | `/api/admin/process-paper/{paperId}?examType=&subjectId=&topicId=&difficulty=` | JWT | one-shot: read pages → find questions → save + answer-key pass → `{paperId,pages,questionsFound,savedCount,answerKeyApplied}` (status EXTRACTING→EXTRACTED, FAILED+errorLog on error) |
+| POST | `/api/admin/papers/{paperId}/submit` | JWT | 409 `{paperId,pending}` if any question still PENDING, else status SUBMITTED → `{paperId,submitted}` |
 | GET | `/api/admin/images/{paperId}/page-{page}.png` | JWT | PNG resource |
 | GET | `/api/admin/question-images/{paperId}/{file}` | JWT | PNG resource (`question-1.png` …) |
 | GET | `/api/questions/paper/{paperId}` | JWT | saved questions + options |
@@ -32,6 +34,7 @@ DB DDL auto-updates (`spring.jpa.hibernate.ddl-auto=update`); canonical SQL is
 | PATCH | `/api/questions/{id}/verify?status=APPROVED\|REJECTED` | JWT | |
 | PUT | `/api/questions/{id}` | JWT | `{questionText,markdown,latex,explanation,difficulty,questionType,tolerance,correctIntegerAnswer,correctNumericAnswer,correctAnswer,removeImage,imageUrl,options:[{label,optionText,optionLatex,correct}]}` — `correctAnswer` string parsed per type (INTEGER→Long, NUMERIC→Double); `removeImage:true` or `imageUrl:null` clears image |
 | POST | `/api/questions/{id}/image` (multipart `file`) | JWT | png/jpg ≤10MB → stored at `storage/papers/{paperId}/question-{n}-custom.png`, updates `imagePath` + `imageBase64` (raw base64, no prefix) |
+| POST | `/api/questions/{qid}/options/{label}/image` (multipart `file`) | JWT | png/jpg ≤10MB → stored at `storage/papers/{paperId}/question-{n}-opt-{LABEL}.png`, updates `optionImagePath` + `optionImageBase64` |
 | DELETE | `/api/questions/{id}/image` | JWT | clears `imagePath` + `imageBase64` (file left on disk) |
 | POST | `/api/exams` | ADMIN | schedule exam → 201 `{name*,examType,className,board,examDate,startTime,endTime,durationMinutes,fee,regDeadline,maxAttempts,instructions,marksCorrect,negativeMarks,marksUnanswered,resultDate,answerReview,centres}` |
 | GET | `/api/exams` / `/api/exams?status=SCHEDULED` | ADMIN | list all or by status |
@@ -56,6 +59,9 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/admin/extract-text/1
 curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/admin/extract-question-images/1
 curl -X POST -H "Authorization: Bearer $TOKEN" \
   'localhost:8080/api/admin/save-extracted-questions/1?examType=JEE&subjectId=1&difficulty=MEDIUM'
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  'localhost:8080/api/admin/process-paper/1?examType=JEE&subjectId=1&difficulty=MEDIUM'
+curl -X POST -H "Authorization: Bearer $TOKEN" localhost:8080/api/admin/papers/1/submit
 curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/questions/paper/1
 curl -H "Authorization: Bearer $TOKEN" 'localhost:8080/api/questions/generate?subjectId=1&count=5'
 curl -X PATCH -H "Authorization: Bearer $TOKEN" localhost:8080/api/questions/3/verify?status=APPROVED
@@ -94,6 +100,9 @@ curl -X POST -H "Authorization: Bearer $TOKEN" localhost:8080/api/exams/1/publis
 # Replace a question's image (png/jpg, max 10MB)
 curl -X POST -H "Authorization: Bearer $TOKEN" \
   -F file=@diagram.png localhost:8080/api/questions/3/image
+# Replace option B's figure (png/jpg, max 10MB)
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -F file=@opt-b.png localhost:8080/api/questions/3/options/B/image
 curl -X DELETE -H "Authorization: Bearer $TOKEN" localhost:8080/api/questions/3/image
 ```
 
